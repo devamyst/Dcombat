@@ -81,7 +81,7 @@
             <version>1.18.34</version>
             <scope>provided</scope>
         </dependency>
-        <!-- EternalCombat Core Dependencies -->
+        <!-- Dcombat Core Dependencies -->
         <dependency>
             <groupId>dev.rollczi</groupId>
             <artifactId>litecommands-bukkit</artifactId>
