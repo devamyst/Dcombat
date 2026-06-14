@@ -1,0 +1,28 @@
+# Build output
+target/
+*.class
+
+# Packaged artifacts
+*.jar
+*.war
+*.ear
+
+# Maven local metadata
+.flattened-pom.xml
+dependency-reduced-pom.xml
+
+# IDE and editor files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp

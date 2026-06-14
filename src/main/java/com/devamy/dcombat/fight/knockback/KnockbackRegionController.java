@@ -1,0 +1,178 @@
+package com.devamy.dcombat.fight.knockback;
+
+import com.devamy.dcombat.fight.FightManager;
+import com.devamy.dcombat.fight.event.FightTagEvent;
+import com.devamy.dcombat.notification.NoticeService;
+import com.devamy.dcombat.region.Region;
+import com.devamy.dcombat.region.RegionProvider;
+import java.time.Duration;
+import java.util.Optional;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.vehicle.VehicleMoveEvent;
+import org.spigotmc.event.entity.EntityMountEvent;
+
+public class KnockbackRegionController implements Listener {
+
+    private final NoticeService noticeService;
+    private final RegionProvider regionProvider;
+    private final FightManager fightManager;
+    private final KnockbackService knockbackService;
+    private final Server server;
+
+    public KnockbackRegionController(NoticeService noticeService, RegionProvider regionProvider, FightManager fightManager, KnockbackService knockbackService, Server server) {
+        this.noticeService = noticeService;
+        this.regionProvider = regionProvider;
+        this.fightManager = fightManager;
+        this.knockbackService = knockbackService;
+        this.server = server;
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    void onPlayerMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        if (!this.fightManager.isInCombat(player.getUniqueId())) {
+            return;
+        }
+
+        Location locationTo = event.getTo();
+        int xTo = locationTo.getBlockX();
+        int yTo = locationTo.getBlockY();
+        int zTo = locationTo.getBlockZ();
+
+        Location locationFrom = event.getFrom();
+        int xFrom = locationFrom.getBlockX();
+        int yFrom = locationFrom.getBlockY();
+        int zFrom = locationFrom.getBlockZ();
+
+        if (xTo != xFrom || yTo != yFrom || zTo != zFrom) {
+            Optional<Region> regionOptional = this.regionProvider.getRegion(locationTo);
+            if (regionOptional.isEmpty()) {
+                return;
+            }
+
+            Region region = regionOptional.get();
+            if (region.contains(locationFrom)) {
+                this.knockbackService.knockback(region, player);
+                this.knockbackService.forceKnockbackLater(player, region);
+            } else {
+                event.setCancelled(true);
+                this.knockbackService.knockbackLater(region, player, Duration.ofMillis(50));
+            }
+
+            this.noticeService.create()
+                .player(player.getUniqueId())
+                .notice(config -> config.messagesSettings.cantEnterOnRegion)
+                .send();
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    void onPlayerTeleport(PlayerTeleportEvent event) {
+        Player player = event.getPlayer();
+        if (!this.fightManager.isInCombat(player.getUniqueId())) {
+            return;
+        }
+
+        Location targetLocation = event.getTo();
+
+        if (this.regionProvider.isInRegion(targetLocation)) {
+            event.setCancelled(true);
+            this.noticeService.create()
+                .player(player.getUniqueId())
+                .notice(config -> config.messagesSettings.cantEnterOnRegion)
+                .send();
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    void onVehicleMove(VehicleMoveEvent event) {
+        Location locationTo = event.getTo();
+        Location locationFrom = event.getFrom();
+
+        if (locationTo.getBlockX() == locationFrom.getBlockX()
+            && locationTo.getBlockY() == locationFrom.getBlockY()
+            && locationTo.getBlockZ() == locationFrom.getBlockZ()) {
+            return;
+        }
+
+        for (Entity passenger : event.getVehicle().getPassengers()) {
+            if (!(passenger instanceof Player player)) {
+                continue;
+            }
+
+            if (!this.fightManager.isInCombat(player.getUniqueId())) {
+                continue;
+            }
+
+            Optional<Region> regionOptional = this.regionProvider.getRegion(locationTo);
+            if (regionOptional.isEmpty()) {
+                return;
+            }
+
+            Region region = regionOptional.get();
+            if (region.contains(locationFrom)) {
+                this.knockbackService.knockback(region, player);
+                this.knockbackService.forceKnockbackLater(player, region);
+            } else {
+                this.knockbackService.knockbackLater(region, player, Duration.ofMillis(50));
+            }
+
+            this.noticeService.create()
+                .player(player.getUniqueId())
+                .notice(config -> config.messagesSettings.cantEnterOnRegion)
+                .send();
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    void onEntityMount(EntityMountEvent event) {
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (!this.fightManager.isInCombat(player.getUniqueId())) {
+            return;
+        }
+
+        if (!this.regionProvider.isInRegion(event.getMount().getLocation())) {
+            return;
+        }
+
+        event.setCancelled(true);
+        this.noticeService.create()
+            .player(player.getUniqueId())
+            .notice(config -> config.messagesSettings.cantEnterOnRegion)
+            .send();
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    void onTag(FightTagEvent event) {
+        Player player = this.server.getPlayer(event.getPlayer());
+        if (player == null) {
+            throw new IllegalStateException("Player cannot be null!");
+        }
+
+        Optional<Region> regionOptional = this.regionProvider.getRegion(player.getLocation());
+        if (regionOptional.isEmpty()) {
+            return;
+        }
+
+        Region region = regionOptional.get();
+        this.knockbackService.knockback(region, player);
+        this.knockbackService.forceKnockbackLater(player, region);
+
+        this.noticeService.create()
+            .player(player.getUniqueId())
+            .notice(config -> config.messagesSettings.cantEnterOnRegion)
+            .send();
+    }
+
+}

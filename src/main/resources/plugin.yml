@@ -1,0 +1,11 @@
+main: com.devamy.dcombat.DcombatPlugin
+version: 1
+name: Dcombat
+author: Devamy
+description: A combat plugin featuring combat logging, spawn protection, and customizable combat mechanics
+api-version: 1.19
+depend: [packetevents]
+softdepend: [Vault, PlaceholderAPI, WorldGuard, Lands, LifestealCore]
+folia-supported: true
+prefix: Dcombat
+load: POSTWORLD

@@ -1,0 +1,79 @@
+package com.devamy.dcombat.crystalpvp;
+
+import com.devamy.dcombat.config.implementation.PluginConfig;
+import com.devamy.dcombat.fight.FightManager;
+import com.devamy.dcombat.fight.event.CauseOfTag;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.EnderCrystal;
+import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByBlockEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.metadata.MetadataValue;
+
+public class CrystalPvpConstants {
+
+    private CrystalPvpConstants() {
+    }
+
+    public static final String CRYSTAL_METADATA = "dcombat:crystal";
+    public static final String ANCHOR_METADATA = "dcombat:anchor";
+
+    public static Optional<UUID> getDamagerUniqueIdFromEndCrystal(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof EnderCrystal enderCrystal) {
+            List<MetadataValue> metadataValues = enderCrystal.getMetadata(CRYSTAL_METADATA);
+            return metadataValues
+                .stream()
+                .filter(source -> source instanceof CrystalMetadata)
+                .map(meta -> (CrystalMetadata) meta)
+                .findFirst()
+                .flatMap(CrystalMetadata::getDamager);
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<UUID> getDamagerUniqueIdFromRespawnAnchor(EntityDamageByBlockEvent event) {
+        Block damager = event.getDamager();
+        if (damager == null) {
+            return Optional.empty();
+        }
+
+        if (damager.getType() != Material.RESPAWN_ANCHOR) {
+            return Optional.empty();
+        }
+
+        return damager.getMetadata(ANCHOR_METADATA).stream()
+            .filter(source -> source instanceof CrystalMetadata)
+            .map(meta -> (CrystalMetadata) meta)
+            .findFirst()
+            .flatMap(metadata -> metadata.getDamager());
+    }
+
+    static void handleCombatTag(
+        Optional<UUID> optionalDamagerUUID,
+        Player player,
+        FightManager fightManager,
+        PluginConfig pluginConfig
+    ) {
+        UUID victimUniqueId = player.getUniqueId();
+
+        if (optionalDamagerUUID.isPresent()) {
+            UUID damagerUniqueId = optionalDamagerUUID.get();
+            if (!damagerUniqueId.equals(victimUniqueId)) {
+                fightManager.tag(
+                    damagerUniqueId,
+                    pluginConfig.settings.combatTimerDuration,
+                    CauseOfTag.CRYSTAL
+                );
+                fightManager.tag(
+                    victimUniqueId,
+                    pluginConfig.settings.combatTimerDuration,
+                    CauseOfTag.CRYSTAL
+                );
+            }
+        }
+    }
+}
