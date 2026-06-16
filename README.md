@@ -26,7 +26,7 @@ Optional integrations:
 - WorldGuard
 - Lands
 - Vault
-- LifestealCore
+- LifestealCore (https://www.spigotmc.org/resources/1-8-8-26-1-2-lifestealcore-the-premium-lifesteal-experience-now-with-custom-textures.101284/)
 
 ## Build
 
