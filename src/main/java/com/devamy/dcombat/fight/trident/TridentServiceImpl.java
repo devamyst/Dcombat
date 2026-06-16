@@ -1,10 +1,7 @@
 package com.devamy.dcombat.fight.trident;
 
 import com.devamy.dcombat.config.implementation.PluginConfig;
-import com.devamy.dcombat.fight.FightManager;
-import com.eternalcode.commons.delay.Delay;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
+import com.devamy.dcombat.util.Delay;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -38,4 +35,3 @@ public class TridentServiceImpl implements TridentService {
         return this.delay.getRemaining(uuid);
     }
 }
-

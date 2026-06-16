@@ -1,26 +1,8 @@
 package com.devamy.dcombat.util;
 
-import com.eternalcode.commons.time.DurationParser;
-import com.eternalcode.commons.time.TemporalAmountParser;
-import java.math.RoundingMode;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 
 public class DurationUtil {
-
-    private static final TemporalAmountParser<Duration> WITHOUT_MILLIS_FORMAT = new DurationParser()
-        .withUnit("s", ChronoUnit.SECONDS)
-        .withUnit("m", ChronoUnit.MINUTES)
-        .withUnit("h", ChronoUnit.HOURS)
-        .withUnit("d", ChronoUnit.DAYS)
-        .withRounded(ChronoUnit.MILLIS, RoundingMode.UP);
-
-    private static final TemporalAmountParser<Duration> STANDARD_FORMAT = new DurationParser()
-        .withUnit("d", ChronoUnit.DAYS)
-        .withUnit("h", ChronoUnit.HOURS)
-        .withUnit("m", ChronoUnit.MINUTES)
-        .withUnit("s", ChronoUnit.SECONDS)
-        .withUnit("ms", ChronoUnit.MILLIS);
 
     public static final Duration ONE_SECOND = Duration.ofSeconds(1);
 
@@ -34,17 +16,63 @@ public class DurationUtil {
                 return "0s";
             }
 
-            return WITHOUT_MILLIS_FORMAT.format(duration);
+            return formatWithoutMillis(duration.plusMillis(999));
         }
 
         if (duration.toMillis() > ONE_SECOND.toMillis()) {
-            return WITHOUT_MILLIS_FORMAT.format(duration);
+            return formatWithoutMillis(duration.plusMillis(999));
         }
 
-        return STANDARD_FORMAT.format(duration);
+        return formatWithMillis(duration);
     }
 
     public static String format(Duration duration) {
         return format(duration, true);
+    }
+
+    private static String formatWithoutMillis(Duration duration) {
+        long seconds = Math.max(0L, duration.toSeconds());
+        long days = seconds / 86_400L;
+        seconds %= 86_400L;
+        long hours = seconds / 3_600L;
+        seconds %= 3_600L;
+        long minutes = seconds / 60L;
+        seconds %= 60L;
+
+        StringBuilder builder = new StringBuilder();
+        append(builder, days, "d");
+        append(builder, hours, "h");
+        append(builder, minutes, "m");
+        append(builder, seconds, "s");
+
+        if (builder.isEmpty()) {
+            return "0s";
+        }
+
+        return builder.toString();
+    }
+
+    private static String formatWithMillis(Duration duration) {
+        long millis = Math.max(0L, duration.toMillis());
+        long seconds = millis / 1000L;
+        millis %= 1000L;
+
+        StringBuilder builder = new StringBuilder();
+        append(builder, seconds, "s");
+        append(builder, millis, "ms");
+
+        if (builder.isEmpty()) {
+            return "0ms";
+        }
+
+        return builder.toString();
+    }
+
+    private static void append(StringBuilder builder, long value, String unit) {
+        if (value <= 0L) {
+            return;
+        }
+
+        builder.append(value).append(unit);
     }
 }

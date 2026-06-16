@@ -3,7 +3,7 @@ package com.devamy.dcombat.fight.death;
 import com.devamy.dcombat.config.implementation.PluginConfig;
 import com.devamy.dcombat.fight.event.CauseOfUnTag;
 import com.devamy.dcombat.fight.event.FightUntagEvent;
-import com.eternalcode.commons.scheduler.Scheduler;
+import com.devamy.dcombat.scheduler.Scheduler;
 import java.time.Duration;
 import java.util.UUID;
 import org.bukkit.Color;

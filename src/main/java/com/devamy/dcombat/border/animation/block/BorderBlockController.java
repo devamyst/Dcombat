@@ -4,7 +4,7 @@ import com.devamy.dcombat.border.BorderPoint;
 import com.devamy.dcombat.border.BorderService;
 import com.devamy.dcombat.border.event.BorderHideAsyncEvent;
 import com.devamy.dcombat.border.event.BorderShowAsyncEvent;
-import com.eternalcode.commons.scheduler.Scheduler;
+import com.devamy.dcombat.scheduler.Scheduler;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.PacketEventsAPI;
 import com.github.retrooper.packetevents.manager.player.PlayerManager;

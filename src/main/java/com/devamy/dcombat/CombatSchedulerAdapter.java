@@ -1,8 +1,8 @@
 package com.devamy.dcombat;
 
-import com.eternalcode.commons.bukkit.scheduler.BukkitSchedulerImpl;
-import com.eternalcode.commons.bukkit.scheduler.MinecraftScheduler;
-import com.eternalcode.commons.folia.scheduler.FoliaSchedulerImpl;
+import com.devamy.dcombat.scheduler.BukkitScheduler;
+import com.devamy.dcombat.scheduler.FoliaScheduler;
+import com.devamy.dcombat.scheduler.Scheduler;
 import java.util.logging.Logger;
 import org.bukkit.plugin.Plugin;
 
@@ -14,17 +14,17 @@ public final class CombatSchedulerAdapter {
         throw new UnsupportedOperationException("This is an utility class and cannot be instantiated");
     }
 
-    public static MinecraftScheduler getAdaptiveScheduler(Plugin plugin) {
+    public static Scheduler getAdaptiveScheduler(Plugin plugin) {
         Logger logger = plugin.getLogger();
 
         try {
             Class.forName(FOLIA_CLASS);
             logger.info("» Detected Folia environment. Using FoliaScheduler.");
-            return new FoliaSchedulerImpl(plugin);
+            return new FoliaScheduler(plugin);
         }
         catch (ClassNotFoundException exception) {
             logger.info("» Detected Bukkit/Paper environment. Using BukkitScheduler.");
-            return new BukkitSchedulerImpl(plugin);
+            return new BukkitScheduler(plugin);
         }
     }
 }

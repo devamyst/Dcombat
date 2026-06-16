@@ -1,33 +1,66 @@
 package com.devamy.dcombat.updater;
 
-import com.eternalcode.commons.updater.UpdateResult;
-import com.eternalcode.commons.updater.Version;
-import com.eternalcode.commons.updater.impl.ModrinthUpdateChecker;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import org.bukkit.plugin.PluginDescriptionFile;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UpdaterService {
 
     private static final String MODRINTH_PROJECT_ID = "Dcombat";
     private static final String CACHE_KEY = "modrinth-update";
+    private static final Pattern VERSION_NUMBER_PATTERN = Pattern.compile("\"version_number\"\\s*:\\s*\"([^\"]+)\"");
 
     private final AsyncLoadingCache<String, UpdateResult> updateCache;
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final String currentVersion;
 
     public UpdaterService(PluginDescriptionFile descriptionFile) {
-        Version currentVersion = new Version(descriptionFile.getVersion());
-        ModrinthUpdateChecker updateChecker = new ModrinthUpdateChecker();
+        this.currentVersion = descriptionFile.getVersion();
 
         this.updateCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofHours(1))
-            .buildAsync(key -> updateChecker.check(MODRINTH_PROJECT_ID, currentVersion));
+            .buildAsync(key -> this.checkModrinth());
     }
 
     CompletableFuture<UpdateResult> checkForUpdate() {
         return this.updateCache.get(CACHE_KEY);
     }
 
+    private UpdateResult checkModrinth() throws IOException, InterruptedException {
+        URI uri = URI.create("https://api.modrinth.com/v2/project/" + URLEncoder.encode(MODRINTH_PROJECT_ID, StandardCharsets.UTF_8) + "/version");
+        HttpRequest request = HttpRequest.newBuilder(uri)
+            .header("User-Agent", "Dcombat update checker")
+            .GET()
+            .build();
+
+        HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            return new UpdateResult(false);
+        }
+
+        Matcher matcher = VERSION_NUMBER_PATTERN.matcher(response.body());
+
+        while (matcher.find()) {
+            String latestVersion = matcher.group(1);
+
+            if (!latestVersion.equalsIgnoreCase(this.currentVersion)) {
+                return new UpdateResult(true);
+            }
+        }
+
+        return new UpdateResult(false);
+    }
 }

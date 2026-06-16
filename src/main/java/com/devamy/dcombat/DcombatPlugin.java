@@ -59,12 +59,10 @@ import com.devamy.dcombat.handler.MissingPermissionHandlerImpl;
 import com.devamy.dcombat.fight.lifesteal.LifestealController;
 import com.devamy.dcombat.notification.NoticeService;
 import com.devamy.dcombat.region.RegionProvider;
+import com.devamy.dcombat.scheduler.Scheduler;
 import com.devamy.dcombat.updater.UpdaterNotificationController;
 import com.devamy.dcombat.updater.UpdaterService;
 import com.devamy.dcombat.WikiGenerator;
-import com.eternalcode.commons.adventure.AdventureLegacyColorPostProcessor;
-import com.eternalcode.commons.adventure.AdventureLegacyColorPreProcessor;
-import com.eternalcode.commons.bukkit.scheduler.MinecraftScheduler;
 import com.eternalcode.multification.notice.Notice;
 import com.google.common.base.Stopwatch;
 import dev.rollczi.litecommands.LiteCommands;
@@ -117,7 +115,7 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
         PluginConfig pluginConfig = configService.create(PluginConfig.class, new File(dataFolder, "config.yml"));
         WikiGenerator.writeWiki(dataFolder);
 
-        MinecraftScheduler scheduler = CombatSchedulerAdapter.getAdaptiveScheduler(this);
+        Scheduler scheduler = CombatSchedulerAdapter.getAdaptiveScheduler(this);
 
         this.fightManager = new FightManagerImpl(eventManager);
         this.pearlService = new PearlServiceImpl(this.fightManager, pluginConfig, scheduler);
@@ -132,10 +130,7 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
 
         UpdaterService updaterService = new UpdaterService(this.getDescription());
 
-        MiniMessage miniMessage = MiniMessage.builder()
-            .postProcessor(new AdventureLegacyColorPostProcessor())
-            .preProcessor(new AdventureLegacyColorPreProcessor())
-            .build();
+        MiniMessage miniMessage = MiniMessage.miniMessage();
 
         NoticeService noticeService = new NoticeService(pluginConfig, miniMessage);
 

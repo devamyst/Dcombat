@@ -1,7 +1,6 @@
 package com.devamy.dcombat.updater;
 
 import com.devamy.dcombat.config.implementation.PluginConfig;
-import com.eternalcode.commons.concurrent.FutureHandler;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -36,7 +35,10 @@ public class UpdaterNotificationController implements Listener {
                     player.sendMessage(this.miniMessage.deserialize(NEW_VERSION_AVAILABLE));
                 }
             })
-            .exceptionally(FutureHandler::handleException);
+            .exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return null;
+            });
     }
 
     private boolean shouldNotify(Player player) {

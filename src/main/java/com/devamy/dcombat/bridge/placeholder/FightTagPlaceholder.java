@@ -5,7 +5,6 @@ import com.devamy.dcombat.config.implementation.PluginConfig;
 import com.devamy.dcombat.fight.FightManager;
 import com.devamy.dcombat.fight.FightTag;
 import com.devamy.dcombat.util.DurationUtil;
-import com.eternalcode.commons.time.DurationParser;
 import java.util.Optional;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
@@ -45,7 +44,7 @@ public class FightTagPlaceholder extends PlaceholderExpansion {
 
     private String handleRemainingMillis(OfflinePlayer player) {
         return this.getFightTag(player)
-            .map(tag -> DurationParser.TIME_UNITS.format(tag.getRemainingDuration()))
+            .map(tag -> DurationUtil.format(tag.getRemainingDuration(), false))
             .orElse("");
     }
 

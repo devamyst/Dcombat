@@ -3,7 +3,7 @@ package com.devamy.dcombat.border;
 import com.devamy.dcombat.fight.FightManager;
 import com.devamy.dcombat.fight.event.FightTagEvent;
 import com.devamy.dcombat.fight.event.FightUntagEvent;
-import com.eternalcode.commons.bukkit.scheduler.MinecraftScheduler;
+import com.devamy.dcombat.scheduler.Scheduler;
 import java.time.Duration;
 import java.util.function.Supplier;
 import org.bukkit.Location;
@@ -23,14 +23,14 @@ public class BorderTriggerController implements Listener {
     private final Supplier<BorderSettings> border;
     private final FightManager fightManager;
     private final Server server;
-    private final MinecraftScheduler scheduler;
+    private final Scheduler scheduler;
 
     public BorderTriggerController(
         BorderService borderService,
         Supplier<BorderSettings> border,
         FightManager fightManager,
         Server server,
-        MinecraftScheduler scheduler
+        Scheduler scheduler
     ) {
         this.borderService = borderService;
         this.border = border;

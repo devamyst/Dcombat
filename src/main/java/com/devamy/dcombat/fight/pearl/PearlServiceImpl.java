@@ -3,8 +3,8 @@ package com.devamy.dcombat.fight.pearl;
 import com.devamy.dcombat.config.implementation.PluginConfig;
 import com.devamy.dcombat.fight.FightManager;
 import com.devamy.dcombat.fight.event.CauseOfTag;
-import com.eternalcode.commons.delay.Delay;
-import com.eternalcode.commons.scheduler.Scheduler;
+import com.devamy.dcombat.scheduler.Scheduler;
+import com.devamy.dcombat.util.Delay;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 

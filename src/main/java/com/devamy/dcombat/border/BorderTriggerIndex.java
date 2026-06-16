@@ -2,8 +2,7 @@ package com.devamy.dcombat.border;
 
 import com.devamy.dcombat.region.Region;
 import com.devamy.dcombat.region.RegionProvider;
-import com.eternalcode.commons.bukkit.scheduler.MinecraftScheduler;
-import com.eternalcode.commons.scheduler.Scheduler;
+import com.devamy.dcombat.scheduler.Scheduler;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,13 +17,13 @@ import org.bukkit.World;
 class BorderTriggerIndex {
 
     private final Server server;
-    private final MinecraftScheduler scheduler;
+    private final Scheduler scheduler;
     private final RegionProvider provider;
     private final Supplier<BorderSettings> settings;
 
     private final Map<String, BorderTriggerIndexBucket> borderIndexes = new HashMap<>();
 
-    private BorderTriggerIndex(Server server, MinecraftScheduler scheduler, RegionProvider provider, Supplier<BorderSettings> settings) {
+    private BorderTriggerIndex(Server server, Scheduler scheduler, RegionProvider provider, Supplier<BorderSettings> settings) {
         this.server = server;
         this.scheduler = scheduler;
         this.provider = provider;
@@ -57,7 +56,7 @@ class BorderTriggerIndex {
         });
     }
 
-    static BorderTriggerIndex started(Server server, MinecraftScheduler scheduler, RegionProvider provider, Supplier<BorderSettings> settings) {
+    static BorderTriggerIndex started(Server server, Scheduler scheduler, RegionProvider provider, Supplier<BorderSettings> settings) {
         BorderTriggerIndex index = new BorderTriggerIndex(server, scheduler, provider, settings);
         scheduler.timerAsync(() -> index.updateWorlds(), Duration.ZERO, settings.get().indexRefreshDelay());
         return index;

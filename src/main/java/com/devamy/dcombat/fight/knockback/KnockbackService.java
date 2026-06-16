@@ -4,7 +4,7 @@ import com.cryptomorin.xseries.XMaterial;
 import com.devamy.dcombat.config.implementation.PluginConfig;
 import com.devamy.dcombat.region.Region;
 import com.devamy.dcombat.region.RegionProvider;
-import com.eternalcode.commons.bukkit.scheduler.MinecraftScheduler;
+import com.devamy.dcombat.scheduler.Scheduler;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,12 +25,12 @@ public final class KnockbackService {
     public static final int DEPTH_OF_SEARCHING = 10;
 
     private final PluginConfig config;
-    private final MinecraftScheduler scheduler;
+    private final Scheduler scheduler;
     private final RegionProvider regionProvider;
 
     private final Map<UUID, Region> insideRegion = new HashMap<>();
 
-    public KnockbackService(PluginConfig config, MinecraftScheduler scheduler, RegionProvider regionProvider) {
+    public KnockbackService(PluginConfig config, Scheduler scheduler, RegionProvider regionProvider) {
         this.config = config;
         this.scheduler = scheduler;
         this.regionProvider = regionProvider;
