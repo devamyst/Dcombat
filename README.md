@@ -34,7 +34,6 @@ A feature-rich combat plugin for **Paper** and **Folia** Minecraft servers. Dcom
 8. [Building from Source](#building-from-source)
 9. [Repository Layout](#repository-layout)
 10. [GitHub Workflow](#github-workflow)
-11. [Release Checklist](#release-checklist)
 12. [License](#license)
 
 ---
