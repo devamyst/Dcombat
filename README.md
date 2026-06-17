@@ -1,4 +1,3 @@
-Dcombat
 Dcombat is a Paper/Folia combat plugin for Minecraft servers. It includes combat tagging, combat logging behavior, spawn/region handling, visual combat borders, configurable restrictions, and integrations with common server plugins.
 
 Features
