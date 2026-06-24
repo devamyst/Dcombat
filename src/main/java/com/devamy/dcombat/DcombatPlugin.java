@@ -2,6 +2,8 @@ package com.devamy.dcombat;
 
 import com.devamy.dcombat.border.BorderService;
 import com.devamy.dcombat.border.BorderServiceImpl;
+import com.devamy.dcombat.library.KnownLibraries;
+import com.devamy.dcombat.library.LibraryDownloader;
 import com.devamy.dcombat.border.BorderTriggerController;
 import com.devamy.dcombat.border.animation.block.BorderBlockController;
 import com.devamy.dcombat.border.animation.particle.ParticleController;
@@ -109,6 +111,16 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
     private LiteCommands<CommandSender> liteCommands;
     private boolean apiInitialized;
 
+    @Override
+    public void onLoad() {
+        LibraryDownloader downloader = new LibraryDownloader(
+            this.getDataFolder().toPath(),
+            this.getLogger(),
+            KnownLibraries.all()
+        );
+        downloader.downloadAll();
+        downloader.injectClasspath(this.getClass().getClassLoader());
+    }
 
     @Override
     public void onEnable() {
