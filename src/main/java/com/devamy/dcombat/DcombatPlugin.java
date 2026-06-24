@@ -3,7 +3,7 @@ package com.devamy.dcombat;
 import com.devamy.dcombat.border.BorderService;
 import com.devamy.dcombat.border.BorderServiceImpl;
 import com.devamy.dcombat.library.KnownLibraries;
-import com.devamy.dcombat.library.LibraryDownloader;
+import com.devamy.dcombat.library.LibraryLoader;
 import com.devamy.dcombat.border.BorderTriggerController;
 import com.devamy.dcombat.border.animation.block.BorderBlockController;
 import com.devamy.dcombat.border.animation.particle.ParticleController;
@@ -85,6 +85,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.net.URLClassLoader;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -113,13 +114,21 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
 
     @Override
     public void onLoad() {
-        LibraryDownloader downloader = new LibraryDownloader(
+        LibraryLoader loader = new LibraryLoader(
             this.getDataFolder().toPath(),
             this.getLogger(),
             KnownLibraries.all()
         );
-        downloader.downloadAll();
-        downloader.injectClasspath(this.getClass().getClassLoader());
+        loader.downloadAll();
+
+        URLClassLoader pluginCL = this.getClass().getClassLoader() instanceof URLClassLoader urlCl
+            ? urlCl : null;
+
+        if (pluginCL != null) {
+            loader.injectInto(pluginCL);
+        }
+
+        loader.createClassLoader(this.getClass().getClassLoader());
     }
 
     @Override

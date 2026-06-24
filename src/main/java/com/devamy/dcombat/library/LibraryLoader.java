@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class LibraryDownloader {
+public class LibraryLoader {
 
     private static final int CONNECT_TIMEOUT = 10_000;
     private static final int READ_TIMEOUT = 30_000;
@@ -22,9 +22,10 @@ public class LibraryDownloader {
     private final Path libsDirectory;
     private final Logger logger;
     private final List<LibraryDefinition> libraries;
-    private final List<Path> downloadedJars = new ArrayList<>();
+    private final List<URL> libraryUrls = new ArrayList<>();
+    private URLClassLoader classLoader;
 
-    public LibraryDownloader(Path dataFolder, Logger logger, List<LibraryDefinition> libraries) {
+    public LibraryLoader(Path dataFolder, Logger logger, List<LibraryDefinition> libraries) {
         this.libsDirectory = dataFolder.resolve("libs");
         this.logger = logger;
         this.libraries = libraries;
@@ -47,7 +48,7 @@ public class LibraryDownloader {
         Path jarPath = this.libsDirectory.resolve(lib.jarFileName());
 
         if (Files.exists(jarPath)) {
-            this.downloadedJars.add(jarPath);
+            this.addLibrary(jarPath);
             return;
         }
 
@@ -58,7 +59,7 @@ public class LibraryDownloader {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setConnectTimeout(CONNECT_TIMEOUT);
             conn.setReadTimeout(READ_TIMEOUT);
-            conn.setRequestProperty("User-Agent", "Dcombat-LibraryDownloader");
+            conn.setRequestProperty("User-Agent", "Dcombat-LibraryLoader");
 
             int responseCode = conn.getResponseCode();
             if (responseCode != 200) {
@@ -78,44 +79,65 @@ public class LibraryDownloader {
                 return;
             }
 
-            this.downloadedJars.add(jarPath);
+            this.addLibrary(jarPath);
             this.logger.info("Downloaded " + lib.artifactId() + " v" + lib.version() + " (" + this.formatSize(actualSize) + ")");
         } catch (IOException | URISyntaxException e) {
             this.logger.warning("Could not download " + lib.artifactId() + ": " + e.getMessage());
         }
     }
 
-    public boolean injectClasspath(ClassLoader pluginClassLoader) {
-        if (this.downloadedJars.isEmpty()) {
-            return true;
+    private void addLibrary(Path jarPath) {
+        try {
+            this.libraryUrls.add(jarPath.toUri().toURL());
+        } catch (IOException e) {
+            this.logger.warning("Could not resolve library path: " + e.getMessage());
+        }
+    }
+
+    public URLClassLoader createClassLoader(ClassLoader parent) {
+        if (this.libraryUrls.isEmpty()) {
+            this.classLoader = new URLClassLoader(new URL[0], parent);
+            return this.classLoader;
         }
 
-        if (!(pluginClassLoader instanceof URLClassLoader urlClassLoader)) {
-            this.logger.warning("Plugin classloader is not a URLClassLoader, cannot inject libraries. "
-                + "The plugin may not function correctly without the following libraries shaded in.");
-            return false;
+        this.classLoader = new URLClassLoader(
+            this.libraryUrls.toArray(new URL[0]),
+            parent
+        );
+
+        this.logger.info("Created library classloader with " + this.libraryUrls.size() + " jars");
+        return this.classLoader;
+    }
+
+    public boolean injectInto(URLClassLoader target) {
+        if (this.libraryUrls.isEmpty()) {
+            return true;
         }
 
         try {
             Method addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
             addUrlMethod.setAccessible(true);
 
-            for (Path jar : this.downloadedJars) {
-                URL jarUrl = jar.toUri().toURL();
-                addUrlMethod.invoke(urlClassLoader, jarUrl);
-                this.logger.fine("Injected " + jar.getFileName() + " into plugin classpath");
+            for (URL url : this.libraryUrls) {
+                addUrlMethod.invoke(target, url);
+                this.logger.fine("Injected " + url.getFile() + " into " + target.getClass().getSimpleName());
             }
 
-            this.logger.info("Injected " + this.downloadedJars.size() + " downloaded libraries into classpath");
+            this.logger.info("Injected " + this.libraryUrls.size() + " libraries into plugin classpath");
             return true;
         } catch (Exception e) {
             this.logger.warning("Failed to inject libraries into classpath: " + e.getMessage());
+            this.logger.warning("Plugin may not function correctly - libraries will be loaded via the child classloader");
             return false;
         }
     }
 
-    public List<Path> getDownloadedJars() {
-        return List.copyOf(this.downloadedJars);
+    public URLClassLoader getClassLoader() {
+        return this.classLoader;
+    }
+
+    public List<URL> getLibraryUrls() {
+        return List.copyOf(this.libraryUrls);
     }
 
     private String formatSize(long bytes) {
