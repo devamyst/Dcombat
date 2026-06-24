@@ -120,6 +120,9 @@ public class TridentController implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onUntag(FightUntagEvent event) {
         Player player = server.getPlayer(event.getPlayer());
+        if (player == null) {
+            return;
+        }
         player.setCooldown(Material.TRIDENT, 0);
         this.tridentService.removeDelay(player.getUniqueId());
     }

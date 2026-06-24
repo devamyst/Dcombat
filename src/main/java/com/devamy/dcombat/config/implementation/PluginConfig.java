@@ -8,10 +8,14 @@ import com.devamy.dcombat.fight.knockback.KnockbackSettings;
 import com.devamy.dcombat.fight.pearl.PearlSettings;
 import com.devamy.dcombat.fight.trident.TridentSettings;
 import eu.okaeri.configs.OkaeriConfig;
+import eu.okaeri.configs.annotation.Exclude;
 import java.time.Duration;
 import java.util.List;
 
 public class PluginConfig extends OkaeriConfig {
+
+    @Exclude
+    public int configVersion = 1;
 
     public Settings settings = new Settings();
 
@@ -48,6 +52,10 @@ public class PluginConfig extends OkaeriConfig {
     public MessagesSettings messagesSettings = new MessagesSettings();
 
     public LifestealSettings lifesteal = new LifestealSettings();
+
+    public BossBarSettings bossBar = new BossBarSettings();
+
+    public CombatStatsSettings combatStats = new CombatStatsSettings();
 
     public static class Settings extends OkaeriConfig {
         public boolean notifyAboutUpdates = true;

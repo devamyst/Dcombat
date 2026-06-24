@@ -56,6 +56,13 @@ public class LogoutController implements DynamicListener<PlayerQuitEvent> {
         }
     }
 
+    @EventHandler(priority = EventPriority.MONITOR)
+    private void onKickMonitor(PlayerKickEvent event) {
+        if (event.isCancelled()) {
+            this.shouldNotPunishOnQuit.remove(event.getPlayer().getUniqueId());
+        }
+    }
+
     @Override
     public void onEvent(PlayerQuitEvent event) {
         Player player = event.getPlayer();

@@ -4,14 +4,14 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DropKeepInventoryServiceImpl implements DropKeepInventoryService {
 
-    private final Map<UUID, List<ItemStack>> itemsToGiveAfterRespawn = new HashMap<>();
+    private final Map<UUID, List<ItemStack>> itemsToGiveAfterRespawn = new ConcurrentHashMap<>();
 
     @Override
     public void addItem(UUID uuid, ItemStack item) {

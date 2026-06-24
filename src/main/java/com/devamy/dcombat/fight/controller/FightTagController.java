@@ -4,6 +4,7 @@ import com.devamy.dcombat.WhitelistBlacklistMode;
 import com.devamy.dcombat.config.implementation.PluginConfig;
 import com.devamy.dcombat.fight.FightManager;
 import com.devamy.dcombat.fight.event.CauseOfTag;
+import com.devamy.dcombat.fight.stats.FightStatsService;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -22,10 +23,12 @@ public class FightTagController implements Listener {
 
     private final FightManager fightManager;
     private final PluginConfig config;
+    private final FightStatsService statsService;
 
-    public FightTagController(FightManager fightManager, PluginConfig config) {
+    public FightTagController(FightManager fightManager, PluginConfig config, FightStatsService statsService) {
         this.fightManager = fightManager;
         this.config = config;
+        this.statsService = statsService;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -73,6 +76,9 @@ public class FightTagController implements Listener {
 
         this.fightManager.tag(attackedUniqueId, combatTime, CauseOfTag.PLAYER, attackerUniqueId);
         this.fightManager.tag(attackerUniqueId, combatTime, CauseOfTag.PLAYER, attackedUniqueId);
+
+        this.statsService.addTag(attackedUniqueId);
+        this.statsService.addTag(attackerUniqueId);
     }
 
 

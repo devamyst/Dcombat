@@ -56,11 +56,41 @@ public class UpdaterService {
         while (matcher.find()) {
             String latestVersion = matcher.group(1);
 
-            if (!latestVersion.equalsIgnoreCase(this.currentVersion)) {
-                return new UpdateResult(true);
+            if (this.isNewerVersion(latestVersion, this.currentVersion)) {
+                return new UpdateResult(true, latestVersion);
             }
         }
 
         return new UpdateResult(false);
+    }
+
+    private boolean isNewerVersion(String latest, String current) {
+        if (latest.equalsIgnoreCase(current)) {
+            return false;
+        }
+
+        String[] latestParts = latest.split("[._-]");
+        String[] currentParts = current.split("[._-]");
+
+        int maxLength = Math.max(latestParts.length, currentParts.length);
+
+        for (int i = 0; i < maxLength; i++) {
+            int latestPart = i < latestParts.length ? this.parseVersionPart(latestParts[i]) : 0;
+            int currentPart = i < currentParts.length ? this.parseVersionPart(currentParts[i]) : 0;
+
+            if (latestPart != currentPart) {
+                return latestPart > currentPart;
+            }
+        }
+
+        return !latest.equalsIgnoreCase(current);
+    }
+
+    private int parseVersionPart(String part) {
+        try {
+            return Integer.parseInt(part);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }

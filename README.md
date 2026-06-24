@@ -27,7 +27,9 @@ A feature-rich combat plugin for **Paper** and **Folia** Minecraft servers. Dcom
    - [Inventory Settings](#15-inventory-settings)
    - [Placeholder Settings](#16-placeholder-settings)
    - [Messages Settings](#17-messages-settings)
-   - [Lifesteal Settings](#18-lifesteal-settings)
+    - [Lifesteal Settings](#18-lifesteal-settings)
+    - [BossBar Settings](#19-bossbar-settings)
+    - [Combat Stats Settings](#20-combat-stats-settings)
 5. [PlaceholderAPI](#placeholderapi)
 6. [Developer API](#developer-api)
 7. [Plugin Integrations](#plugin-integrations)
@@ -122,6 +124,17 @@ Removes the combat tag from every currently tagged player.
 Displays how many players are currently in combat.
 
 | Permission | `dcombat.stats` |
+|---|---|
+
+### `/combatlog stats <player>`
+Displays detailed combat stats (tags, kills, deaths, total combat time) for the specified player.
+
+| Permission | `dcombat.stats.other` |
+|---|---|
+
+Players can also check their own stats with `/combatlog stats`.
+
+| Permission | `dcombat.stats.self` |
 |---|---|
 
 ---
@@ -579,6 +592,38 @@ lifesteal:
 
 ---
 
+### 19. BossBar Settings
+
+```yaml
+bossBar:
+  enabled: true
+  color: RED
+  style: SOLID
+  title: "<red>⚔ Combat <gray>| <white>{TIME}</white></gray>"
+```
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | boolean | `true` | Show the BossBar to players tagged in combat. |
+| `color` | BossBar.Color | `RED` | Bar color: `BLUE`, `GREEN`, `PINK`, `PURPLE`, `RED`, `WHITE`, `YELLOW`. |
+| `style` | BossBar.Overlay | `SOLID` | Bar style: `SOLID`, `SEGMENTED_6`, `SEGMENTED_10`, `SEGMENTED_12`, `SEGMENTED_20`. |
+| `title` | MiniMessage string | `<red>⚔ Combat <gray>\| <white>{TIME}</white></gray>` | Display text shown on the BossBar. `{TIME}` is replaced with the remaining combat time. |
+
+---
+
+### 20. Combat Stats Settings
+
+```yaml
+combatStats:
+  enabled: true
+```
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | boolean | `true` | Enable tracking of per-player combat statistics (tags, kills, deaths, total combat time). Stats are visible through `/combatlog stats`. |
+
+---
+
 ## PlaceholderAPI
 
 Install **PlaceholderAPI** to use these placeholders. The identifier is `dcombat`.
@@ -601,13 +646,16 @@ Dcombat exposes a `DcombatApi` interface for other plugins to hook into.
 ```java
 DcombatApi api = DcombatProvider.get(); // static accessor
 
-FightManager    fightManager    = api.getFightManager();
-RegionProvider  regionProvider  = api.getRegionProvider();
-PearlService    pearlService    = api.getFightPearlService();
-FightTagOutService tagOutService = api.getFightTagOutService();
-FightEffectService effectService = api.getFightEffectService();
-DropService     dropService     = api.getDropService();
-DropKeepInventoryService keepInv = api.getDropKeepInventoryService();
+FightManager            fightManager    = api.getFightManager();
+RegionProvider          regionProvider  = api.getRegionProvider();
+PearlService            pearlService    = api.getFightPearlService();
+FightTagOutService      tagOutService   = api.getFightTagOutService();
+FightEffectService      effectService   = api.getFightEffectService();
+DropService             dropService     = api.getDropService();
+DropKeepInventoryService keepInv        = api.getDropKeepInventoryService();
+BorderService           borderService   = api.getBorderService();
+TridentService          tridentService  = api.getTridentService();
+FightStatsService       statsService    = api.getFightStatsService();
 ```
 
 ### Bukkit Events

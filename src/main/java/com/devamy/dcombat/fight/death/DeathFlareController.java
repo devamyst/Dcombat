@@ -3,8 +3,6 @@ package com.devamy.dcombat.fight.death;
 import com.devamy.dcombat.config.implementation.PluginConfig;
 import com.devamy.dcombat.fight.event.CauseOfUnTag;
 import com.devamy.dcombat.fight.event.FightUntagEvent;
-import com.devamy.dcombat.scheduler.Scheduler;
-import java.time.Duration;
 import java.util.UUID;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -22,18 +20,19 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class DeathFlareController implements Listener {
 
     private final PluginConfig pluginConfig;
     private final Server server;
-    private final Scheduler scheduler;
     private final NamespacedKey key;
+    private final Plugin plugin;
 
-    public DeathFlareController(PluginConfig pluginConfig, Server server, Scheduler scheduler, Plugin plugin) {
+    public DeathFlareController(PluginConfig pluginConfig, Server server, Plugin plugin) {
         this.pluginConfig = pluginConfig;
         this.server = server;
-        this.scheduler = scheduler;
+        this.plugin = plugin;
         this.key = NamespacedKey.fromString("dcombat_firework", plugin);
     }
 
@@ -102,15 +101,21 @@ public class DeathFlareController implements Listener {
     }
 
     private void scheduleParticles(Firework flare, World world) {
-        this.scheduler.runLaterAsync(
-            () -> {
-                if (flare.isDead() || !flare.isValid()) {
+        int maxTicks = (this.pluginConfig.death.firework.power + 1) * 20;
+
+        new BukkitRunnable() {
+            private int ticks = 0;
+
+            @Override
+            public void run() {
+                if (flare.isDead() || !flare.isValid() || ticks >= maxTicks) {
+                    this.cancel();
                     return;
                 }
-                this.spawnParticles(world, flare);
-                this.scheduleParticles(flare, world);
-            }, Duration.ofMillis(50)
-        );
+                spawnParticles(world, flare);
+                ticks++;
+            }
+        }.runTaskTimer(plugin, 0L, 1L);
     }
 
     private Color decodeColor(String firework, String name) {

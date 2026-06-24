@@ -2,13 +2,13 @@ package com.devamy.dcombat.fight.tagout;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FightTagOutServiceImpl implements FightTagOutService {
 
-    private final Map<UUID, Instant> tagOuts = new HashMap<>();
+    private final Map<UUID, Instant> tagOuts = new ConcurrentHashMap<>();
 
     @Override
     public void tagOut(UUID player, Duration duration) {
@@ -29,9 +29,13 @@ public class FightTagOutServiceImpl implements FightTagOutService {
         if (endTime == null) {
             return false;
         }
-        Instant now = Instant.now();
 
-        return now.isBefore(endTime);
+        if (Instant.now().isAfter(endTime)) {
+            this.tagOuts.remove(player);
+            return false;
+        }
+
+        return true;
     }
 
 }

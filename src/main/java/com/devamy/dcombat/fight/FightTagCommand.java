@@ -7,7 +7,10 @@ import com.devamy.dcombat.fight.event.CauseOfTag;
 import com.devamy.dcombat.fight.event.CauseOfUnTag;
 import com.devamy.dcombat.fight.event.FightTagEvent;
 import com.devamy.dcombat.fight.event.FightUntagEvent;
+import com.devamy.dcombat.fight.stats.CombatStats;
+import com.devamy.dcombat.fight.stats.FightStatsService;
 import com.devamy.dcombat.notification.NoticeService;
+import com.eternalcode.multification.notice.Notice;
 import dev.rollczi.litecommands.annotations.argument.Arg;
 import dev.rollczi.litecommands.annotations.command.Command;
 import dev.rollczi.litecommands.annotations.context.Context;
@@ -24,14 +27,24 @@ import org.bukkit.entity.Player;
 @Command(name = "combatlog", aliases = "combat")
 public class FightTagCommand {
 
+    private static final Notice PLAYER_STATS_MESSAGE = Notice.chat(
+        "<gradient:#ff6666:#ff0000>⚔ <white>{PLAYER}</white> Combat Stats</gradient>\n" +
+        "<gray>Tags: <white>{TAGS}</white></gray>\n" +
+        "<gray>Kills: <white>{KILLS}</white></gray>\n" +
+        "<gray>Deaths: <white>{DEATHS}</white></gray>\n" +
+        "<gray>Time in combat: <white>{TIME}</white></gray>"
+    );
+
     private final FightManager fightManager;
     private final NoticeService noticeService;
     private final PluginConfig config;
+    private final FightStatsService statsService;
 
-    public FightTagCommand(FightManager fightManager, NoticeService noticeService, PluginConfig config) {
+    public FightTagCommand(FightManager fightManager, NoticeService noticeService, PluginConfig config, FightStatsService statsService) {
         this.fightManager = fightManager;
         this.noticeService = noticeService;
         this.config = config;
+        this.statsService = statsService;
     }
 
     @Execute(name = "status")
@@ -89,35 +102,47 @@ public class FightTagCommand {
             return;
         }
 
-        FightTagEvent firstTagEvent = this.fightManager.tag(firstTarget.getUniqueId(), combatTime, CauseOfTag.COMMAND);
-        FightTagEvent secondTagEvent = this.fightManager.tag(secondTarget.getUniqueId(), combatTime, CauseOfTag.COMMAND);
+        UUID firstId = firstTarget.getUniqueId();
+        UUID secondId = secondTarget.getUniqueId();
 
-        if (firstTagEvent.isCancelled()) {
-            CancelTagReason cancelReason = firstTagEvent.getCancelReason();
+        FightTagEvent firstTagEvent = this.fightManager.tag(firstId, combatTime, CauseOfTag.COMMAND, secondId);
+        FightTagEvent secondTagEvent = this.fightManager.tag(secondId, combatTime, CauseOfTag.COMMAND, firstId);
 
-            this.tagoutReasonHandler(sender, cancelReason, messagesSettings);
+        boolean firstCancelled = firstTagEvent.isCancelled();
+        boolean secondCancelled = secondTagEvent.isCancelled();
 
+        if (!firstCancelled && !secondCancelled) {
+            this.noticeService.create()
+                .notice(messagesSettings.admin.adminTagMultiplePlayers)
+                .placeholder("{FIRST_PLAYER}", firstTarget.getName())
+                .placeholder("{SECOND_PLAYER}", secondTarget.getName())
+                .viewer(sender)
+                .send();
             return;
         }
 
-        if (secondTagEvent.isCancelled()) {
-            CancelTagReason cancelReason = secondTagEvent.getCancelReason();
-
-            this.tagoutReasonHandler(sender, cancelReason, messagesSettings);
-
-            return;
+        if (firstCancelled) {
+            this.tagoutReasonHandler(sender, firstTagEvent.getCancelReason(), messagesSettings);
+            if (!secondCancelled) {
+                this.fightManager.untag(secondId, CauseOfUnTag.COMMAND);
+            }
         }
 
-        if (firstTagEvent.isCancelled() && secondTagEvent.isCancelled()) {
-            return;
+        if (secondCancelled) {
+            this.tagoutReasonHandler(sender, secondTagEvent.getCancelReason(), messagesSettings);
+            if (!firstCancelled) {
+                this.fightManager.untag(firstId, CauseOfUnTag.COMMAND);
+            }
         }
 
-        this.noticeService.create()
-            .notice(messagesSettings.admin.adminTagMultiplePlayers)
-            .placeholder("{FIRST_PLAYER}", firstTarget.getName())
-            .placeholder("{SECOND_PLAYER}", secondTarget.getName())
-            .viewer(sender)
-            .send();
+        if (firstCancelled || secondCancelled) {
+            this.noticeService.create()
+                .notice(messagesSettings.admin.adminTagTry)
+                .placeholder("{FIRST_PLAYER}", firstTarget.getName())
+                .placeholder("{SECOND_PLAYER}", secondTarget.getName())
+                .viewer(sender)
+                .send();
+        }
     }
 
     @Execute(name = "untag")
@@ -175,6 +200,36 @@ public class FightTagCommand {
             .placeholder("{COUNT}", String.valueOf(activeCombatPlayers))
             .viewer(sender)
             .send();
+    }
+
+    @Execute(name = "stats")
+    @Permission("dcombat.stats.other")
+    void statsOther(@Context CommandSender sender, @Arg Player target) {
+        CombatStats stats = this.statsService.getStats(target.getUniqueId());
+
+        this.noticeService.create()
+            .notice(PLAYER_STATS_MESSAGE)
+            .placeholder("{PLAYER}", target.getName())
+            .placeholder("{TAGS}", String.valueOf(stats.getTotalTags()))
+            .placeholder("{KILLS}", String.valueOf(stats.getCombatKills()))
+            .placeholder("{DEATHS}", String.valueOf(stats.getCombatDeaths()))
+            .placeholder("{TIME}", this.formatDuration(Duration.ofMillis(stats.getTotalCombatTimeMillis())))
+            .viewer(sender)
+            .send();
+    }
+
+    private String formatDuration(Duration duration) {
+        long totalSeconds = duration.getSeconds();
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+        if (hours > 0) {
+            return String.format("%dh %dm %ds", hours, minutes, seconds);
+        } else if (minutes > 0) {
+            return String.format("%dm %ds", minutes, seconds);
+        } else {
+            return String.format("%ds", seconds);
+        }
     }
 
     private void tagoutReasonHandler(

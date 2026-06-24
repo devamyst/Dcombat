@@ -95,6 +95,9 @@ public class MessagesSettings extends OkaeriConfig {
         public Notice adminTagOutCanceled = Notice
             .chat("<gradient:red:dark_red>❌ Player has tag-out protection!</gradient>");
 
+        public Notice adminTagTry = Notice.chat(
+            "<gradient:red:dark_red>⚠ Could not fully tag both players!</gradient>");
+
         public Notice combatStats = Notice
             .chat("<gradient:#ff6666:#ff0000>⚔ <gray>Players in combat:</gray> <white>{COUNT}</white></gradient>");
     }

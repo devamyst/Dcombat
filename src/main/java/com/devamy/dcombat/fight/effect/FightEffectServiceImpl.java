@@ -4,15 +4,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FightEffectServiceImpl implements FightEffectService {
 
-    private final Map<UUID, List<PotionEffect>> activeEffects = new HashMap<>();
+    private final Map<UUID, List<PotionEffect>> activeEffects = new ConcurrentHashMap<>();
     private static final int INFINITE_DURATION = -1;
 
     @Override

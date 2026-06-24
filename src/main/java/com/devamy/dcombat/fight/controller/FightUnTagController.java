@@ -3,8 +3,10 @@ package com.devamy.dcombat.fight.controller;
 import com.devamy.dcombat.crystalpvp.CrystalPvpConstants;
 import com.devamy.dcombat.fight.FightManager;
 import com.devamy.dcombat.fight.event.CauseOfUnTag;
+import com.devamy.dcombat.fight.stats.FightStatsService;
 import com.devamy.dcombat.config.implementation.PluginConfig;
 import com.devamy.dcombat.fight.logout.LogoutService;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.entity.Player;
@@ -20,11 +22,13 @@ public class FightUnTagController implements Listener {
     private final FightManager fightManager;
     private final PluginConfig config;
     private final LogoutService logoutService;
+    private final FightStatsService statsService;
 
-    public FightUnTagController(FightManager fightManager, PluginConfig config, LogoutService logoutService) {
+    public FightUnTagController(FightManager fightManager, PluginConfig config, LogoutService logoutService, FightStatsService statsService) {
         this.fightManager = fightManager;
         this.config = config;
         this.logoutService = logoutService;
+        this.statsService = statsService;
     }
 
     @EventHandler
@@ -46,6 +50,12 @@ public class FightUnTagController implements Listener {
         }
 
         CauseOfUnTag cause = this.getDeathCause(playerUniqueId, optionalKiller.orElse(null));
+
+        this.statsService.addDeath(playerUniqueId);
+        if (optionalKiller.isPresent()) {
+            this.statsService.addKill(optionalKiller.get());
+        }
+        this.statsService.addCombatTime(playerUniqueId, Duration.ZERO);
 
         this.fightManager.untag(player.getUniqueId(), cause);
 

@@ -1,15 +1,16 @@
 package com.devamy.dcombat.fight;
 
 import com.devamy.dcombat.config.implementation.PluginConfig;
+import com.devamy.dcombat.fight.bossbar.BossBarController;
 import com.devamy.dcombat.fight.event.CauseOfUnTag;
+import com.devamy.dcombat.fight.stats.FightStatsService;
 import com.devamy.dcombat.notification.NoticeService;
 import com.devamy.dcombat.util.DurationUtil;
+import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
-
-import java.time.Duration;
-import java.util.UUID;
 
 public class FightTask implements Runnable {
 
@@ -17,12 +18,16 @@ public class FightTask implements Runnable {
     private final PluginConfig config;
     private final FightManager fightManager;
     private final NoticeService noticeService;
+    private final FightStatsService statsService;
+    private final BossBarController bossBarController;
 
-    public FightTask(Server server, PluginConfig config, FightManager fightManager, NoticeService noticeService) {
+    public FightTask(Server server, PluginConfig config, FightManager fightManager, NoticeService noticeService, FightStatsService statsService, BossBarController bossBarController) {
         this.server = server;
         this.config = config;
         this.fightManager = fightManager;
         this.noticeService = noticeService;
+        this.statsService = statsService;
+        this.bossBarController = bossBarController;
     }
 
     @Override
@@ -56,6 +61,9 @@ public class FightTask implements Runnable {
                 .placeholder("{OPPONENT}", opponent)
                 .send();
 
+            this.statsService.addCombatTime(playerUniqueId, Duration.ofSeconds(1));
         }
+
+        this.bossBarController.updateBossBars();
     }
 }

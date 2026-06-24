@@ -43,24 +43,20 @@ public class FightEffectController implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onQuit(FightUntagEvent event) {
+    public void onUntag(FightUntagEvent event) {
         if (!this.effectSettings.customEffectsEnabled) {
             return;
         }
 
-        if (event.getCause() == CauseOfUnTag.LOGOUT) {
+        CauseOfUnTag cause = event.getCause();
+
+        if (cause == CauseOfUnTag.LOGOUT || cause == CauseOfUnTag.DEATH || cause == CauseOfUnTag.DEATH_BY_PLAYER) {
             Player player = this.server.getPlayer(event.getPlayer());
             if (player == null) {
                 return;
             }
 
             this.effectService.clearStoredEffects(player);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onUntag(FightUntagEvent event) {
-        if (!this.effectSettings.customEffectsEnabled) {
             return;
         }
 

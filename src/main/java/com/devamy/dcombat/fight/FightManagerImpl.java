@@ -27,13 +27,18 @@ public class FightManagerImpl implements FightManager {
 
     @Override
     public boolean isInCombat(UUID player) {
-        if (!this.fights.containsKey(player)) {
+        FightTag fightTag = this.fights.get(player);
+
+        if (fightTag == null) {
             return false;
         }
 
-        FightTag fightTag = this.fights.get(player);
+        if (fightTag.isExpired()) {
+            this.fights.remove(player);
+            return false;
+        }
 
-        return !fightTag.isExpired();
+        return true;
     }
 
     @Override

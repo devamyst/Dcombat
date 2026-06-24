@@ -62,7 +62,7 @@ public class PearlController implements Listener {
                 .notice(this.pluginConfig.pearl.pearlThrowBlockedDelayDuringCombat)
                 .placeholder("{TIME}", DurationUtil.format(remainingDelay))
                 .send();
-
+            return;
         }
 
         this.pearlService.handleDelay(player);

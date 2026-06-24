@@ -30,7 +30,7 @@ public class FightMessageController implements Listener {
         Player player = this.server.getPlayer(event.getPlayer());
 
         if (player == null) {
-            throw new IllegalStateException("Player cannot be null!");
+            return;
         }
 
         if (this.fightManager.isInCombat(player.getUniqueId())) {
@@ -48,7 +48,7 @@ public class FightMessageController implements Listener {
         Player player = this.server.getPlayer(event.getPlayer());
 
         if (player == null) {
-            throw new IllegalStateException("Player cannot be null!");
+            return;
         }
 
         this.noticeService.create()

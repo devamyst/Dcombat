@@ -8,6 +8,7 @@ import com.devamy.dcombat.border.animation.particle.ParticleController;
 import com.devamy.dcombat.bridge.BridgeService;
 import com.devamy.dcombat.config.ConfigService;
 import com.devamy.dcombat.config.implementation.PluginConfig;
+import com.devamy.dcombat.config.migration.ConfigMigrator;
 import com.devamy.dcombat.crystalpvp.EndCrystalListener;
 import com.devamy.dcombat.crystalpvp.RespawnAnchorListener;
 import com.devamy.dcombat.event.EventManager;
@@ -19,6 +20,7 @@ import com.devamy.dcombat.fight.blocker.CommandsBlocker;
 import com.devamy.dcombat.fight.blocker.ElytraBlocker;
 import com.devamy.dcombat.fight.blocker.ElytraEquipBlocker;
 import com.devamy.dcombat.fight.blocker.FlyingBlocker;
+import com.devamy.dcombat.fight.bossbar.BossBarController;
 import com.devamy.dcombat.fight.controller.FightBypassAdminController;
 import com.devamy.dcombat.fight.controller.FightBypassCreativeController;
 import com.devamy.dcombat.fight.controller.FightBypassPermissionController;
@@ -42,11 +44,13 @@ import com.devamy.dcombat.fight.effect.FightEffectServiceImpl;
 import com.devamy.dcombat.fight.firework.FireworkController;
 import com.devamy.dcombat.fight.knockback.KnockbackRegionController;
 import com.devamy.dcombat.fight.knockback.KnockbackService;
+import com.devamy.dcombat.fight.logout.LogoutAlertController;
 import com.devamy.dcombat.fight.logout.LogoutController;
 import com.devamy.dcombat.fight.logout.LogoutService;
 import com.devamy.dcombat.fight.pearl.PearlController;
 import com.devamy.dcombat.fight.pearl.PearlService;
 import com.devamy.dcombat.fight.pearl.PearlServiceImpl;
+import com.devamy.dcombat.fight.stats.FightStatsService;
 import com.devamy.dcombat.fight.tagout.FightTagOutCommand;
 import com.devamy.dcombat.fight.tagout.FightTagOutController;
 import com.devamy.dcombat.fight.tagout.FightTagOutService;
@@ -96,6 +100,10 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
     private DropService dropService;
     private DropKeepInventoryService dropKeepInventoryService;
 
+    private FightStatsService fightStatsService;
+
+    private BorderService borderService;
+
     private RegionProvider regionProvider;
 
     private LiteCommands<CommandSender> liteCommands;
@@ -122,6 +130,7 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
         this.tridentService = new TridentServiceImpl(pluginConfig);
         this.fightTagOutService = new FightTagOutServiceImpl();
         this.fightEffectService = new FightEffectServiceImpl();
+        this.fightStatsService = new FightStatsService();
 
         LogoutService logoutService = new LogoutService();
 
@@ -144,8 +153,13 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
         bridgeService.init(server);
 
         this.regionProvider = bridgeService.getRegionProvider();
-        BorderService borderService = new BorderServiceImpl(scheduler, server, regionProvider, eventManager, () -> pluginConfig.border);
+        this.borderService = new BorderServiceImpl(scheduler, server, regionProvider, eventManager, () -> pluginConfig.border);
         KnockbackService knockbackService = new KnockbackService(pluginConfig, scheduler, regionProvider);
+
+        BossBarController bossBarController = new BossBarController(this.fightManager, pluginConfig.bossBar, server, miniMessage);
+
+        ConfigMigrator configMigrator = new ConfigMigrator(this.getLogger());
+        configMigrator.migrate(pluginConfig);
 
         this.liteCommands = LiteBukkitFactory.builder(FALLBACK_PREFIX, this, server)
             .message(LiteBukkitMessages.PLAYER_NOT_FOUND, pluginConfig.messagesSettings.playerNotFound)
@@ -155,9 +169,10 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
             .missingPermission(new MissingPermissionHandlerImpl(pluginConfig, noticeService))
 
             .commands(
-                new FightTagCommand(this.fightManager, noticeService, pluginConfig),
+                new FightTagCommand(this.fightManager, noticeService, pluginConfig, this.fightStatsService),
                 new FightTagOutCommand(this.fightTagOutService, noticeService, pluginConfig),
-                new DcombatReloadCommand(configService, noticeService)
+                new DcombatReloadCommand(configService, noticeService),
+                new com.devamy.dcombat.fight.stats.CombatStatsCommand(this.fightStatsService, noticeService)
             )
 
             .extension(new FoliaExtension(this))
@@ -169,7 +184,7 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
 
             .build();
 
-        FightTask fightTask = new FightTask(server, pluginConfig, this.fightManager, noticeService);
+        FightTask fightTask = new FightTask(server, pluginConfig, this.fightManager, noticeService, this.fightStatsService, bossBarController);
         scheduler.timer(fightTask, Duration.ofSeconds(1), Duration.ofSeconds(1));
 
         new Metrics(this, BSTATS_METRICS_ID);
@@ -180,24 +195,24 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
         ).forEach(this.dropService::registerModifier);
 
         eventManager.subscribe(
-            new FightTagController(this.fightManager, pluginConfig),
-            new FightUnTagController(this.fightManager, pluginConfig, logoutService),
+            new FightTagController(this.fightManager, pluginConfig, this.fightStatsService),
+            new FightUnTagController(this.fightManager, pluginConfig, logoutService, this.fightStatsService),
             new FightBypassAdminController(server, pluginConfig),
             new FightBypassPermissionController(server, pluginConfig),
             new FightBypassCreativeController(server, pluginConfig),
             new PlaceBlockBlocker(this.fightManager, noticeService, pluginConfig),
             new PearlController(pluginConfig, this.pearlService, noticeService, fightManager),
             new TridentController(pluginConfig, noticeService, this.fightManager, this.tridentService, server),
-            new DeathFlareController(pluginConfig, server, scheduler, this),
+            new DeathFlareController(pluginConfig, server, this),
             new DeathLightningController(pluginConfig, server),
             new UpdaterNotificationController(updaterService, pluginConfig, miniMessage),
             new KnockbackRegionController(noticeService, this.regionProvider, this.fightManager, knockbackService, server),
             new FightEffectController(pluginConfig.effect, this.fightEffectService, this.fightManager, server),
             new FightTagOutController(this.fightTagOutService),
             new FightMessageController(this.fightManager, noticeService, pluginConfig, server),
-            new BorderTriggerController(borderService, () -> pluginConfig.border, fightManager, server, scheduler),
-            new ParticleController(borderService, () -> pluginConfig.border.particle, scheduler, server),
-            new BorderBlockController(borderService, () -> pluginConfig.border.block, scheduler, server),
+            new BorderTriggerController(this.borderService, () -> pluginConfig.border, fightManager, server, scheduler),
+            new ParticleController(this.borderService, () -> pluginConfig.border.particle, scheduler, server),
+            new BorderBlockController(this.borderService, () -> pluginConfig.border.block, scheduler, server),
             new EndCrystalListener(this, this.fightManager, pluginConfig),
             new RespawnAnchorListener(this, this.fightManager, pluginConfig),
             new FireworkController(this.fightManager, pluginConfig, noticeService),
@@ -206,8 +221,9 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
             new ElytraBlocker(this.fightManager, pluginConfig),
             new ElytraEquipBlocker(this.fightManager, noticeService, pluginConfig, server),
             new FlyingBlocker(this.fightManager, pluginConfig, server),
-            new PlaceBlockBlocker(this.fightManager, noticeService, pluginConfig),
-            new LifestealController(pluginConfig, this.fightManager, noticeService)
+            new LifestealController(pluginConfig, this.fightManager, noticeService),
+            bossBarController,
+            new LogoutAlertController(this.fightManager, server, noticeService, pluginConfig)
         );
 
         eventManager.subscribe(
@@ -278,5 +294,20 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
     @Override
     public DropKeepInventoryService getDropKeepInventoryService() {
         return this.dropKeepInventoryService;
+    }
+
+    @Override
+    public BorderService getBorderService() {
+        return this.borderService;
+    }
+
+    @Override
+    public TridentService getTridentService() {
+        return this.tridentService;
+    }
+
+    @Override
+    public FightStatsService getFightStatsService() {
+        return this.fightStatsService;
     }
 }

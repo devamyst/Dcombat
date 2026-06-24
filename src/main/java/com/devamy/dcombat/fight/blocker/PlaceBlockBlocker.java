@@ -42,11 +42,9 @@ public class PlaceBlockBlocker implements Listener {
         Block block = event.getBlock();
         int level = block.getY();
 
-        List<Material> specificBlocksToPreventPlacing = this.config.blockPlacement.restrictedBlockTypes;
+        List<Material> restrictedBlocks = this.config.blockPlacement.restrictedBlockTypes;
 
-        boolean isPlacementBlocked = this.isPlacementBlocked(level);
-
-        if (isPlacementBlocked && specificBlocksToPreventPlacing.isEmpty()) {
+        if (restrictedBlocks.contains(block.getType())) {
             event.setCancelled(true);
             this.noticeService.create()
                 .player(uniqueId)
@@ -54,21 +52,17 @@ public class PlaceBlockBlocker implements Listener {
                 .placeholder("{Y}", String.valueOf(this.config.blockPlacement.blockPlacementYCoordinate))
                 .placeholder("{MODE}", this.config.blockPlacement.blockPlacementModeDisplayName)
                 .send();
-
+            return;
         }
 
-        Material blockMaterial = block.getType();
-        boolean isBlockInDisabledList = specificBlocksToPreventPlacing.contains(blockMaterial);
-        if (isPlacementBlocked && isBlockInDisabledList) {
+        if (this.isPlacementBlocked(level)) {
             event.setCancelled(true);
-
             this.noticeService.create()
                 .player(uniqueId)
                 .notice(this.config.messagesSettings.blockPlacingBlockedDuringCombat)
                 .placeholder("{Y}", String.valueOf(this.config.blockPlacement.blockPlacementYCoordinate))
                 .placeholder("{MODE}", this.config.blockPlacement.blockPlacementModeDisplayName)
                 .send();
-
         }
     }
 
