@@ -139,11 +139,6 @@
         </dependency>
         <dependency>
             <groupId>com.eternalcode</groupId>
-            <artifactId>eternalcode-commons-updater</artifactId>
-            <version>1.4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.eternalcode</groupId>
             <artifactId>multification-paper</artifactId>
             <version>1.2.5-SNAPSHOT</version>
         </dependency>
@@ -233,18 +228,6 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>com.github.cryptomorin:XSeries</artifact>
-                                    <excludes>
-                                        <exclude>**</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>com.github.ben-manes.caffeine:caffeine</artifact>
-                                    <excludes>
-                                        <exclude>**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

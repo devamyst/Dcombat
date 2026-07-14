@@ -176,7 +176,6 @@ A `wiki.txt` file is also written to the plugin's data folder as an in-server qu
 
 ```yaml
 settings:
-  notifyAboutUpdates: true
   combatTimerDuration: 20s
   ignoredWorlds:
     - your_world
@@ -184,7 +183,6 @@ settings:
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `notifyAboutUpdates` | boolean | `true` | Notify server operators when a new plugin version is available. |
 | `combatTimerDuration` | Duration | `20s` | How long a player stays in combat after their last PvP interaction. Format: `15s`, `1m`, `1h`. |
 | `ignoredWorlds` | list | `[your_world]` | Worlds where combat tagging is completely disabled. |
 

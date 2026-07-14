@@ -55,6 +55,10 @@ public class MessagesSettings extends OkaeriConfig {
     public static class AdminMessages extends OkaeriConfig {
         public Notice onlyForPlayers = Notice.chat("<gradient:red:dark_red>❌ This command is player-only!</gradient>");
 
+        public Notice pluginReloaded = Notice.builder()
+            .chat("<b><gradient:#8a1212:#fc6b03>Dcombat:</gradient></b> Reloaded Dcombat in <color:#fce303>{TIME}ms!</color>")
+            .build();
+
         public Notice adminTagPlayer = Notice
             .chat("<gradient:#00b3ff:#0066ff>⚔ <gray>Tagged player:</gray> <white>{PLAYER}</white></gradient>");
 
@@ -100,5 +104,19 @@ public class MessagesSettings extends OkaeriConfig {
 
         public Notice combatStats = Notice
             .chat("<gradient:#ff6666:#ff0000>⚔ <gray>Players in combat:</gray> <white>{COUNT}</white></gradient>");
+
+        public Notice playerStatsOther = Notice.chat(
+            "<gradient:#ff6666:#ff0000>⚔ <white>{PLAYER}</white> Combat Stats</gradient>\n" +
+            "<gray>Tags: <white>{TAGS}</white></gray>\n" +
+            "<gray>Kills: <white>{KILLS}</white></gray>\n" +
+            "<gray>Deaths: <white>{DEATHS}</white></gray>\n" +
+            "<gray>Time in combat: <white>{TIME}</white></gray>");
+
+        public Notice playerStatsSelf = Notice.chat(
+            "<gradient:#ff6666:#ff0000>⚔ Your Combat Stats</gradient>\n" +
+            "<gray>Tags: <white>{TAGS}</white></gray>\n" +
+            "<gray>Kills: <white>{KILLS}</white></gray>\n" +
+            "<gray>Deaths: <white>{DEATHS}</white></gray>\n" +
+            "<gray>Time in combat: <white>{TIME}</white></gray>");
     }
 }

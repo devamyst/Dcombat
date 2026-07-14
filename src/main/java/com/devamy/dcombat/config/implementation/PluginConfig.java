@@ -58,8 +58,6 @@ public class PluginConfig extends OkaeriConfig {
     public CombatStatsSettings combatStats = new CombatStatsSettings();
 
     public static class Settings extends OkaeriConfig {
-        public boolean notifyAboutUpdates = true;
-
         public Duration combatTimerDuration = Duration.ofSeconds(20);
 
         public List<String> ignoredWorlds = List.of(

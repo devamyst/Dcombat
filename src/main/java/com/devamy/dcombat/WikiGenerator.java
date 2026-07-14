@@ -20,9 +20,6 @@ Place this file alongside config.yml in your plugin data folder.
 ----------------------------------------------------------------
 1. SETTINGS
 ----------------------------------------------------------------
-notifyAboutUpdates  (boolean, default: true)
-  Show a notification to op players when an update is available.
-
 combatTimerDuration  (Duration, default: 20s)
   How long a player stays in combat tag after their last PvP interaction.
   Format: number + s/m/h (e.g. 15s, 1m, 30m).

@@ -1,5 +1,6 @@
 package com.devamy.dcombat.fight.stats;
 
+import com.devamy.dcombat.config.implementation.PluginConfig;
 import com.devamy.dcombat.notification.NoticeService;
 import com.eternalcode.multification.notice.Notice;
 import dev.rollczi.litecommands.annotations.argument.Arg;
@@ -14,42 +15,28 @@ import org.bukkit.entity.Player;
 @Command(name = "combatlog", aliases = "combat")
 public class CombatStatsCommand {
 
-    private static final Notice STATS_MESSAGE = Notice.chat(
-        "<gradient:#ff6666:#ff0000>⚔ <white>{PLAYER}</white> Combat Stats</gradient>\n" +
-        "<gray>Tags: <white>{TAGS}</white></gray>\n" +
-        "<gray>Kills: <white>{KILLS}</white></gray>\n" +
-        "<gray>Deaths: <white>{DEATHS}</white></gray>\n" +
-        "<gray>Time in combat: <white>{TIME}</white></gray>"
-    );
-
-    private static final Notice SELF_STATS = Notice.chat(
-        "<gradient:#ff6666:#ff0000>⚔ Your Combat Stats</gradient>\n" +
-        "<gray>Tags: <white>{TAGS}</white></gray>\n" +
-        "<gray>Kills: <white>{KILLS}</white></gray>\n" +
-        "<gray>Deaths: <white>{DEATHS}</white></gray>\n" +
-        "<gray>Time in combat: <white>{TIME}</white></gray>"
-    );
-
     private final FightStatsService statsService;
     private final NoticeService noticeService;
+    private final PluginConfig config;
 
-    public CombatStatsCommand(FightStatsService statsService, NoticeService noticeService) {
+    public CombatStatsCommand(FightStatsService statsService, NoticeService noticeService, PluginConfig config) {
         this.statsService = statsService;
         this.noticeService = noticeService;
+        this.config = config;
     }
 
     @Execute(name = "stats")
     @Permission("dcombat.stats.self")
     void statsSelf(@Context Player sender) {
         CombatStats stats = this.statsService.getStats(sender.getUniqueId());
-        this.sendStats(sender, SELF_STATS, sender.getName(), stats);
+        this.sendStats(sender, this.config.messagesSettings.admin.playerStatsSelf, sender.getName(), stats);
     }
 
     @Execute(name = "stats")
     @Permission("dcombat.stats.other")
     void statsOther(@Context CommandSender sender, @Arg Player target) {
         CombatStats stats = this.statsService.getStats(target.getUniqueId());
-        this.sendStats(sender, STATS_MESSAGE, target.getName(), stats);
+        this.sendStats(sender, this.config.messagesSettings.admin.playerStatsOther, target.getName(), stats);
     }
 
     private void sendStats(CommandSender sender, Notice message, String playerName, CombatStats stats) {

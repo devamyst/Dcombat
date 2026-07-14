@@ -1,8 +1,8 @@
 package com.devamy.dcombat;
 
 import com.devamy.dcombat.config.ConfigService;
+import com.devamy.dcombat.config.implementation.PluginConfig;
 import com.devamy.dcombat.notification.NoticeService;
-import com.eternalcode.multification.notice.Notice;
 import com.google.common.base.Stopwatch;
 import dev.rollczi.litecommands.annotations.async.Async;
 import dev.rollczi.litecommands.annotations.command.Command;
@@ -15,16 +15,14 @@ import org.bukkit.command.CommandSender;
 @Command(name = "combatlog", aliases = "combat")
 public class DcombatReloadCommand {
 
-    private static final Notice RELOAD_MESSAGE = Notice.builder()
-        .chat("<b><gradient:#8a1212:#fc6b03>Dcombat:</gradient></b> Reloaded Dcombat in <color:#fce303>{TIME}ms!</color>")
-        .build();
-
     private final ConfigService configService;
     private final NoticeService noticeService;
+    private final PluginConfig config;
 
-    public DcombatReloadCommand(ConfigService configService, NoticeService noticeService) {
+    public DcombatReloadCommand(ConfigService configService, NoticeService noticeService, PluginConfig config) {
         this.configService = configService;
         this.noticeService = noticeService;
+        this.config = config;
     }
 
     @Async
@@ -37,7 +35,7 @@ public class DcombatReloadCommand {
         Duration elapsed = stopwatch.elapsed();
         this.noticeService.create()
             .viewer(sender)
-            .notice(RELOAD_MESSAGE)
+            .notice(this.config.messagesSettings.admin.pluginReloaded)
             .placeholder("{TIME}", String.valueOf(elapsed.toMillis()))
             .send();
 

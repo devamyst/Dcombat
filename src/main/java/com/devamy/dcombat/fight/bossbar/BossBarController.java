@@ -6,6 +6,7 @@ import com.devamy.dcombat.fight.FightTag;
 import com.devamy.dcombat.fight.event.FightTagEvent;
 import com.devamy.dcombat.fight.event.FightUntagEvent;
 import com.devamy.dcombat.util.DurationUtil;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,13 +24,15 @@ public class BossBarController implements Listener {
     private final BossBarSettings settings;
     private final Server server;
     private final MiniMessage miniMessage;
+    private final long combatTimerDurationMillis;
     private final Map<UUID, BossBar> bossBars = new ConcurrentHashMap<>();
 
-    public BossBarController(FightManager fightManager, BossBarSettings settings, Server server, MiniMessage miniMessage) {
+    public BossBarController(FightManager fightManager, BossBarSettings settings, Server server, MiniMessage miniMessage, Duration combatTimerDuration) {
         this.fightManager = fightManager;
         this.settings = settings;
         this.server = server;
         this.miniMessage = miniMessage;
+        this.combatTimerDurationMillis = Math.max(1L, combatTimerDuration.toMillis());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -83,11 +86,11 @@ public class BossBarController implements Listener {
                     player.hideBossBar(bossBar);
                 }
                 this.bossBars.remove(uuid);
-                return;
+                continue;
             }
 
             String timeStr = DurationUtil.format(tag.getRemainingDuration(), true);
-            float progress = Math.min(1.0f, tag.getRemainingDuration().toMillis() / (float) this.fightManager.getTag(uuid).getEndOfCombatLog().toEpochMilli());
+            float progress = Math.min(1.0f, tag.getRemainingDuration().toMillis() / (float) this.combatTimerDurationMillis);
 
             bossBar.name(this.miniMessage.deserialize(this.settings.title.replace("{TIME}", timeStr)));
             bossBar.progress(Math.max(0.01f, progress));

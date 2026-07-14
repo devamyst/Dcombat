@@ -8,6 +8,7 @@ import com.devamy.dcombat.scheduler.Scheduler;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -28,7 +29,7 @@ public final class KnockbackService {
     private final Scheduler scheduler;
     private final RegionProvider regionProvider;
 
-    private final Map<UUID, Region> insideRegion = new HashMap<>();
+    private final Map<UUID, Region> insideRegion = new ConcurrentHashMap<>();
 
     public KnockbackService(PluginConfig config, Scheduler scheduler, RegionProvider regionProvider) {
         this.config = config;
@@ -83,11 +84,9 @@ public final class KnockbackService {
     public void forceKnockbackLater(Player player, Region region) {
         UUID playerId = player.getUniqueId();
 
-        if (insideRegion.containsKey(playerId)) {
+        if (insideRegion.putIfAbsent(playerId, region) != null) {
             return;
         }
-
-        insideRegion.put(playerId, region);
 
         scheduler.runLater(player.getLocation(), () -> {
             insideRegion.remove(playerId);
