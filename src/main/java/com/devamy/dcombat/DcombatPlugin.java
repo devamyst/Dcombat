@@ -64,6 +64,7 @@ import com.devamy.dcombat.fight.lifesteal.LifestealController;
 import com.devamy.dcombat.notification.NoticeService;
 import com.devamy.dcombat.region.RegionProvider;
 import com.devamy.dcombat.scheduler.Scheduler;
+import com.devamy.dcombat.util.StartupBanner;
 import com.devamy.dcombat.WikiGenerator;
 import com.eternalcode.multification.notice.Notice;
 import com.google.common.base.Stopwatch;
@@ -111,6 +112,10 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
     public void onEnable() {
         Stopwatch started = Stopwatch.createStarted();
         Server server = this.getServer();
+        MiniMessage miniMessage = MiniMessage.miniMessage();
+        boolean folia = CombatSchedulerAdapter.isFolia();
+
+        StartupBanner.print(server, miniMessage, this.getDescription(), folia);
 
         File dataFolder = this.getDataFolder();
 
@@ -124,7 +129,7 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
 
         WikiGenerator.writeWiki(dataFolder);
 
-        Scheduler scheduler = CombatSchedulerAdapter.getAdaptiveScheduler(this);
+        Scheduler scheduler = CombatSchedulerAdapter.getAdaptiveScheduler(this, folia);
 
         this.fightManager = new FightManagerImpl(eventManager);
         this.pearlService = new PearlServiceImpl(this.fightManager, pluginConfig, scheduler);
@@ -137,8 +142,6 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
 
         this.dropService = new DropServiceImpl();
         this.dropKeepInventoryService = new DropKeepInventoryServiceImpl();
-
-        MiniMessage miniMessage = MiniMessage.miniMessage();
 
         NoticeService noticeService = new NoticeService(pluginConfig, miniMessage);
 
@@ -237,7 +240,7 @@ public final class DcombatPlugin extends JavaPlugin implements DcombatApi {
         this.apiInitialized = true;
 
         long millis = started.elapsed(TimeUnit.MILLISECONDS);
-        this.getLogger().info("Successfully loaded Dcombat in " + millis + "ms");
+        StartupBanner.printReady(server, miniMessage, millis);
     }
 
     @Override
